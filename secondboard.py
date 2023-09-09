@@ -33,27 +33,52 @@ image_paths = [
     "images/V1_034_.png",
     "images/V1_036_.png",
     "images/V1_037_.png",
+    "images/V1_038_.png",
+    "images/V1_039_.png",
+    "images/V1_042_.png",
+    "images/V1_043_.png",
+    "images/V1_046_.png",
+    "images/V1_047_.png",
+    "images/V1_048_.png",
+    "images/V1_050_.png",
+    "images/V1_051_.png",
+    "images/V1_052_.png",
+    "images/V1_053_.png",
+    "images/V1_054_.png",
+    "images/V1_055_.png",
+    "images/V1_056_.png",
+    "images/V1_057_.png",
+    "images/V1_058_.png",
 ]
 
 random.shuffle(image_paths)
+
+
+def shuffle_array(arr):
+    shuffled = arr.copy()
+    n = len(shuffled)
+    for i in range(n - 1, 0, -1):
+        j = random.randint(0, i)
+        shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+    return shuffled
 
 
 def update_image_paths(level):
     # Shuffle the image paths and take the first `level * level / 2` paths, then double them to create pairs
 
     shuffled_paths = random.sample(image_paths, level * level // 2)
-    print(shuffled_paths)
-    return shuffled_paths * 2  # Double the paths to create pairs
+    return shuffle_array(shuffled_paths * 2)  # Double the paths to create pairs
 
 
-levels_image_path = update_image_paths(2)
+levels_image_path = []
 
 
 def create_buttons(level):
     buttons = []
-    global image_objects  # Make image_objects global
+    global levels_image_path, image_objects  # Make image_objects global
+    levels_image_path = update_image_paths(level)
     image_objects = [
-        ImageTk.PhotoImage(PILImage.open(path)) for path in update_image_paths(level)
+        ImageTk.PhotoImage(PILImage.open(path)) for path in levels_image_path
     ]
 
     for row in range(level):
@@ -61,8 +86,8 @@ def create_buttons(level):
         for col in range(level):
             button = Button(
                 text=" ",
-                height=110,
-                width=110,
+                height=85,
+                width=85,
                 image=my_img,
                 command=lambda row=row, col=col: button_click(
                     buttons[row][col], row * level + col
@@ -96,20 +121,24 @@ buttons = create_buttons(current_level)  # Initialize buttons
 
 
 def flip_back():
+    global check
+    check = False
     for button in unmatched_buttons:
         button["image"] = my_img
         button["text"] = " "
     unmatched_buttons.clear()
 
 
+check = False
 answer_list: list = []
 answer_dict = {}
 unmatched_buttons = []
 
 
 def button_click(button, number):
-    global answer_list, answer_dict, matched_pairs, current_level, unmatched_buttons, levels_image_path
-
+    global answer_list, answer_dict, matched_pairs, current_level, unmatched_buttons, levels_image_path, check
+    if check:
+        return
     if button["text"] == " " and len(answer_list) < 2:
         button["image"] = image_objects[number]
         button["text"] = str(number)
@@ -130,7 +159,7 @@ def button_click(button, number):
 
                 matched_pairs += 1
                 if matched_pairs == current_level * current_level / 2:
-                    if current_level == 6:  # Maximum level reached
+                    if current_level == 8:  # Maximum level reached
                         messagebox.showinfo("板 Memo", "Congratulations! You Won!")
                     else:
                         buttons, current_level = update_grid(
@@ -138,10 +167,10 @@ def button_click(button, number):
                         )  # Update grid
                         matched_pairs = 0
             else:
-                messagebox.showinfo("板 Memo", "hmph..WRONG!")
-
+                # messagebox.showinfo("板 Memo", "hmph..WRONG!")
+                check = True
                 unmatched_buttons = [key for key in answer_dict]
-                root.after(10, flip_back)
+                root.after(1000, flip_back)
                 answer_list = []
 
                 for button in answer_dict:

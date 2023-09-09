@@ -9,49 +9,30 @@ from PIL import ImageTk
 root = Tk()
 root.geometry("1400x1200")
 root.title("板 Memo")
-root.iconbitmap("c:/Users/david/Documents/MyGame/images/icon.ico")
+root.iconbitmap("images/icon.ico")
 
-my_img = ImageTk.PhotoImage(
-    PILImage.open("c:/Users/david/Documents/MyGame/images/card.jpg")
-)
+my_img = ImageTk.PhotoImage(PILImage.open("images/card.jpg"))
+
 
 image_paths = [
-    "c:/Users/david/Documents/MyGame/images/V1_001_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_001_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_002_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_002_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_005_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_005_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_006_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_006_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_007_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_007_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_008_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_008_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_009_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_009_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_011_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_011_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_014_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_014_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_018_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_018_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_021_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_021_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_030_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_030_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_031_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_031_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_032_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_032_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_033_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_033_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_034_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_034_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_036_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_036_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_037_.png",
-    "c:/Users/david/Documents/MyGame/images/V1_037_.png",
+    "images/V1_001_.png",
+    "images/V1_002_.png",
+    "images/V1_005_.png",
+    "images/V1_006_.png",
+    "images/V1_007_.png",
+    "images/V1_008_.png",
+    "images/V1_009_.png",
+    "images/V1_011_.png",
+    "images/V1_014_.png",
+    "images/V1_018_.png",
+    "images/V1_021_.png",
+    "images/V1_030_.png",
+    "images/V1_031_.png",
+    "images/V1_032_.png",
+    "images/V1_033_.png",
+    "images/V1_034_.png",
+    "images/V1_036_.png",
+    "images/V1_037_.png",
 ]
 
 random.shuffle(image_paths)
@@ -59,14 +40,17 @@ random.shuffle(image_paths)
 
 def update_image_paths(level):
     # Shuffle the image paths and take the first `level * level / 2` paths, then double them to create pairs
+
     shuffled_paths = random.sample(image_paths, level * level // 2)
     return shuffled_paths * 2  # Double the paths to create pairs
+
+
+levels_image_path = update_image_paths(2)
 
 
 def create_buttons(level):
     buttons = []
     global image_objects  # Make image_objects global
-
     image_objects = [
         ImageTk.PhotoImage(PILImage.open(path)) for path in update_image_paths(level)
     ]
@@ -84,18 +68,22 @@ def create_buttons(level):
                 ),
             )
             button.grid(row=row, column=col)
+
             button_row.append(button)
+
         buttons.append(button_row)
 
     return buttons
 
 
 def update_grid(buttons_frame, level):
+    global current_level, levels_image_path
+    current_level = level
+    levels_image_path = update_image_paths(level)
     for widget in buttons_frame.winfo_children():
         widget.destroy()
-
     buttons = create_buttons(level)
-    return buttons
+    return buttons, current_level
 
 
 count = 0
@@ -103,7 +91,6 @@ matched_pairs = 0
 current_level = 2  # Starting level
 buttons_frame = Frame(root)
 buttons_frame.grid(row=0, column=0)
-
 buttons = create_buttons(current_level)  # Initialize buttons
 
 
@@ -114,49 +101,51 @@ def flip_back():
     unmatched_buttons.clear()
 
 
-unmatched_buttons = []
-answer_list = []
+answer_list: list = []
 answer_dict = {}
+unmatched_buttons = []
 
 
-def button_click(b, number):
-    global count, answer_list, answer_dict, unmatched_buttons, matched_pairs, current_level
-    new_list = update_image_paths(current_level)
+def button_click(button, number):
+    global answer_list, answer_dict, matched_pairs, current_level, unmatched_buttons, levels_image_path
 
-    if b["text"] == " " and count < 2:
-        b["image"] = image_objects[number]
-        b["text"] = str(number)
-        answer_dict[b] = image_paths[number]
-        count += 1
+    if button["text"] == " " and len(answer_list) < 2:
+        button["image"] = image_objects[number]
+        button["text"] = str(number)
 
-        if len(new_list) == 4:
-            if new_list[0] == new_list[1]:
+        answer_dict[button] = levels_image_path[number]
+        print(answer_dict)
+        answer_list.append(levels_image_path[number])
+        if len(answer_list) == 2:
+            if answer_list[0] == answer_list[1]:
+                print(answer_list)
                 messagebox.showinfo("板 Memo", "YOU RIGHT!")
-                for key in answer_dict:
-                    key["state"] = "disabled"
-                count = 0
+
+                for button in answer_dict:
+                    button["state"] = "disabled"
+
                 answer_list = []
                 answer_dict = {}
-                matched_pairs += 1
 
-                if matched_pairs == current_level * current_level:
+                matched_pairs += 1
+                if matched_pairs == current_level * current_level / 2:
                     if current_level == 6:  # Maximum level reached
                         messagebox.showinfo("板 Memo", "Congratulations! You Won!")
                     else:
-                        current_level += 1
-                        buttons = update_grid(
-                            buttons_frame, current_level
+                        buttons, current_level = update_grid(
+                            buttons_frame, current_level + 2
                         )  # Update grid
                         matched_pairs = 0
-
             else:
                 messagebox.showinfo("板 Memo", "hmph..WRONG!")
+
                 unmatched_buttons = [key for key in answer_dict]
-                root.after(1000, flip_back)
-                count = 0
+                root.after(10, flip_back)
                 answer_list = []
-                for key in answer_dict:
-                    key["text"] = " "
+
+                for button in answer_dict:
+                    button["text"] = " "
+
                 answer_dict = {}
 
 

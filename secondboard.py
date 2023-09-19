@@ -7,7 +7,12 @@ from PIL import Image as PILImage
 from PIL import ImageTk
 
 root = Tk()
-root.geometry("1400x1200")
+
+app_width = 1400
+app_height = 1200
+
+root.geometry(f"{app_width}x{app_height}")
+
 root.title("板 Memo")
 root.iconbitmap("images/icon.ico")
 
@@ -51,6 +56,13 @@ image_paths = [
     "images/V1_058_.png",
 ]
 
+bg = PILImage.open("images/09909.png")
+bg = bg.resize((app_width, app_height))
+bg = ImageTk.PhotoImage(bg)
+
+my_label = Label(root, image=bg)
+my_label.place(x=0, y=0, relwidth=1, relheight=1)
+
 random.shuffle(image_paths)
 
 
@@ -85,6 +97,7 @@ def create_buttons(level):
         button_row = []
         for col in range(level):
             button = Button(
+                buttons_frame,
                 text=" ",
                 height=85,
                 width=85,
@@ -115,9 +128,54 @@ def update_grid(buttons_frame, level):
 count = 0
 matched_pairs = 0
 current_level = 2  # Starting level
+
 buttons_frame = Frame(root)
 buttons_frame.grid(row=0, column=0)
+root.grid_rowconfigure(0, weight=1)
+root.grid_columnconfigure(0, weight=1)
+
+
 buttons = create_buttons(current_level)  # Initialize buttons
+
+
+def start_game():
+    welcome_frame.grid_forget()  # Hide the welcome frame
+    buttons_frame.grid(row=0, column=0)  # Show the game frame
+
+
+bg_image = PILImage.open("images/0546444e.png")
+bg_image = bg_image.resize((app_width, app_height))
+bg_image = ImageTk.PhotoImage(bg_image)
+
+# My Timer
+
+minutes_var = StringVar(value="9")
+seconds_var = StringVar(value="59")
+timer_frame = Frame(root)
+timer_frame.grid(row=0, column=0, sticky="nw", padx=(10, 0), pady=(10, 0))
+
+minutes_label = Label(timer_frame, textvariable=minutes_var, font=("Helvetica", 50))
+minutes_label.grid(row=0, column=0)
+separator_label = Label(timer_frame, text=":", font=("Helvetica", 30))
+separator_label.grid(row=0, column=1, sticky="nw", pady=(10, 0))
+seconds_label = Label(timer_frame, textvariable=seconds_var, font=("Helvetica", 50))
+seconds_label.grid(row=0, column=2, padx=(10, 0))
+
+
+# Welcome Page
+welcome_frame = Frame(root, width=app_width, height=app_height)
+welcome_frame.grid(row=0, column=0, sticky="nsew")
+
+canvas = Canvas(welcome_frame, width=app_width, height=app_height)
+canvas.pack(fill="both", expand=True)
+
+canvas.create_image(0, 0, anchor=NW, image=bg_image)
+# canvas.create_text(650, 250, text="板 Memo", font=("Helvetica", 50), fill="yellow")
+
+start_button = Button(
+    canvas, text="Start Game", font=("Helvetica", 16), command=start_game
+)
+start_button.place(relx=0.5, rely=0.5, anchor=CENTER)
 
 
 def flip_back():
@@ -158,6 +216,7 @@ def button_click(button, number):
                 answer_dict = {}
 
                 matched_pairs += 1
+
                 if matched_pairs == current_level * current_level / 2:
                     if current_level == 8:  # Maximum level reached
                         messagebox.showinfo("板 Memo", "Congratulations! You Won!")

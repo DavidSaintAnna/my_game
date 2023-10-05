@@ -56,9 +56,18 @@ image_paths = [
     "images/V1_058_.png",
 ]
 
+check = False
+answer_list: list = []
+answer_dict = {}
+unmatched_buttons = []
+levels_image_path = []
+matched_pairs = 0
+current_level = 2
+
 bg = PILImage.open("images/09909.png")
 bg = bg.resize((app_width, app_height))
 bg = ImageTk.PhotoImage(bg)
+
 
 my_label = Label(root, image=bg)
 my_label.place(x=0, y=0, relwidth=1, relheight=1)
@@ -80,9 +89,6 @@ def update_image_paths(level):
 
     shuffled_paths = random.sample(image_paths, level * level // 2)
     return shuffle_array(shuffled_paths * 2)  # Double the paths to create pairs
-
-
-levels_image_path = []
 
 
 def create_buttons(level):
@@ -125,9 +131,7 @@ def update_grid(buttons_frame, level):
     return buttons, current_level
 
 
-count = 0
-matched_pairs = 0
-current_level = 2  # Starting level
+# Starting level
 
 buttons_frame = Frame(root)
 buttons_frame.grid(row=0, column=0)
@@ -141,6 +145,7 @@ buttons = create_buttons(current_level)  # Initialize buttons
 def start_game():
     welcome_frame.grid_forget()  # Hide the welcome frame
     buttons_frame.grid(row=0, column=0)  # Show the game frame
+    countdown()
 
 
 bg_image = PILImage.open("images/0546444e.png")
@@ -149,7 +154,7 @@ bg_image = ImageTk.PhotoImage(bg_image)
 
 # My Timer
 
-minutes_var = StringVar(value="9")
+minutes_var = StringVar(value="14")
 seconds_var = StringVar(value="59")
 timer_frame = Frame(root)
 timer_frame.grid(row=0, column=0, sticky="nw", padx=(10, 0), pady=(10, 0))
@@ -160,6 +165,47 @@ separator_label = Label(timer_frame, text=":", font=("Helvetica", 30))
 separator_label.grid(row=0, column=1, sticky="nw", pady=(10, 0))
 seconds_label = Label(timer_frame, textvariable=seconds_var, font=("Helvetica", 50))
 seconds_label.grid(row=0, column=2, padx=(10, 0))
+
+
+def countdown():
+    global minutes, seconds
+    minutes = int(minutes_var.get())
+    seconds = int(seconds_var.get())
+
+    def update_timer():
+        global minutes, seconds
+        if minutes == 0 and seconds == 0:
+            messagebox.showinfo("板 Memo", "Game Over! MWHAHAHA!")
+            reset_game()
+            return
+        if seconds == 0:
+            minutes -= 1
+            seconds = 59
+        else:
+            seconds -= 1
+
+        minutes_var.set(str(minutes).zfill(2))
+        seconds_var.set(str(seconds).zfill(2))
+        root.after(1000, update_timer)
+
+    update_timer()
+
+
+def reset_game():
+    global current_level, matched_pairs, minutes, seconds, answer_dict, unmatched_buttons, answer_list
+    current_level = 2  # Reset current level
+    matched_pairs = 0  # Reset matched pairs
+    minutes = 14
+    seconds = 59
+    minutes_var.set(str(minutes).zfill(2))  # Update minutes label
+    seconds_var.set(str(seconds).zfill(2))
+    answer_list = []
+    answer_dict = {}
+    unmatched_buttons = []
+    for widget in buttons_frame.winfo_children():
+        widget.destroy()
+    buttons = create_buttons(current_level)
+    welcome_frame.grid(row=0, column=0, sticky="nsew")
 
 
 # Welcome Page
@@ -185,12 +231,6 @@ def flip_back():
         button["image"] = my_img
         button["text"] = " "
     unmatched_buttons.clear()
-
-
-check = False
-answer_list: list = []
-answer_dict = {}
-unmatched_buttons = []
 
 
 def button_click(button, number):
